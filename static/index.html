@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Candle study</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #142033;
+      --muted: #5c6b80;
+      --line: #d7e0ea;
+      --paper: #f4f7fb;
+      --card: #ffffff;
+      --up: #0f7a4a;
+      --down: #b42318;
+      --mixed: #9a6700;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+    }
+    header, main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 28px 0 8px; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    p { line-height: 1.45; }
+    .lead { margin: 0; color: var(--muted); max-width: 720px; }
+    form {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 22px 0;
+    }
+    input, select, button {
+      font: inherit;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      background: white;
+    }
+    input { min-width: 220px; }
+    button {
+      background: #143a63;
+      color: white;
+      border: 0;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    #trade { background: #0f7a4a; }
+    #trade:hover { background: #0c6340; }
+    .layout { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    canvas { width: 100%; height: 360px; display: block; }
+    #chart, #previous, #history, #forecast { height: auto; }
+    #chart { touch-action: none; cursor: grab; }
+    #chart:active { cursor: grabbing; }
+    .forecast-card { margin-top: 16px; }
+    .section-title { margin: 0 0 8px; font-size: 18px; }
+    .lean { font-size: 22px; margin: 0 0 8px; }
+    .up { color: var(--up); }
+    .down { color: var(--down); }
+    .mixed { color: var(--mixed); }
+    .mal { color: var(--ink); }
+    .turn-row { display: flex; gap: 22px; align-items: flex-end; flex-wrap: wrap; margin: 12px 0; }
+    .turn-col { width: 92px; text-align: center; }
+    .turn-plot { position: relative; height: 150px; margin-bottom: 6px; }
+    .turn-wick { position: absolute; left: 50%; width: 2px; transform: translateX(-50%); background: var(--ink); }
+    .turn-body { position: absolute; left: 28px; width: 36px; border-radius: 2px; }
+    .turn-body.up { background: var(--up); }
+    .turn-body.down { background: var(--down); }
+    .turn-label { font-size: 12px; color: var(--muted); min-height: 32px; }
+    #turn-checks { list-style: none; padding: 0; }
+    #turn-checks li { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding: 6px 0; }
+    .chance-wrap { max-height: 360px; overflow: auto; margin-top: 12px; border-top: 1px solid var(--line); }
+    #turn-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    #turn-table th, #turn-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    #turn-table td.detail { white-space: normal; min-width: 240px; }
+    #turn-table tr.latest { background: #f4f7fb; font-weight: 700; }
+    ul { margin: 8px 0 0; padding-left: 18px; }
+    .candles { display: grid; gap: 10px; margin-top: 16px; }
+    .candle {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+    .tag { font-weight: 700; }
+    .green { color: var(--up); }
+    .red { color: var(--down); }
+    .error { color: var(--down); }
+    .note { color: var(--muted); font-size: 13px; }
+    .graphs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .graphs canvas { height: 240px; }
+    .prob { display: grid; grid-template-columns: 72px 1fr 48px; gap: 8px; align-items: center; margin: 8px 0; }
+    .track { height: 10px; background: #e6edf5; border-radius: 99px; overflow: hidden; }
+    .fill { height: 100%; width: 0; }
+    .fill.up { background: var(--up); }
+    .fill.mixed { background: var(--mixed); }
+    .fill.down { background: var(--down); }
+    .news-item { border-top: 1px solid var(--line); padding: 8px 0; }
+    .features { display: grid; grid-template-columns: 1.4fr 0.8fr 0.5fr; gap: 4px 8px; font-size: 13px; }
+    .rapid-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+    .rapid-head h2 { margin: 0; }
+    .rapid-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 12px; }
+    .rapid-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2px 12px;
+      width: 100%;
+      margin: 0;
+      padding: 10px 8px;
+      border: 0;
+      border-top: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .rapid-row:hover { background: #f4f7fb; }
+    .rapid-name { font-weight: 700; }
+    .pace { font-weight: 700; }
+    .rapid-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .rapid-actions p { margin: 0; }
+    .next3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+    .next3 article { border-top: 1px solid var(--line); padding-top: 8px; }
+    .next3 .tag { margin-bottom: 4px; }
+    .next3 .low, .next3 .high { font-weight: 700; font-size: 18px; }
+    .next3 .low { color: var(--down); }
+    .next3 .high { color: var(--up); }
+    .rapid-span { grid-column: 1 / -1; }
+    .grade { font-weight: 700; }
+    .grade.A { color: var(--up); }
+    .grade.B { color: var(--mixed); }
+    .grade.C { color: var(--muted); }
+    .desk { margin: 12px 0; padding-top: 10px; border-top: 1px solid var(--line); }
+    .desk p { margin: 6px 0; }
+    .plan { margin: 10px 0 0; font-weight: 600; }
+    .chart-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .chart-head h2 { margin: 0; }
+    .zoom-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tool {
+      background: white;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      padding: 8px 12px;
+    }
+    .tool:hover { background: #e8eef6; }
+    button.tool.on { background: #143a63; color: white; }
+    .ranges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0 10px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+    .swatch { width: 22px; height: 0; border-top-width: 3px; border-top-style: solid; }
+    .swatch.enter { border-color: #143a63; }
+    .swatch.exit { border-color: #0f7a4a; }
+    .swatch.target { border-color: var(--up); }
+    .swatch.trend { border-color: #c4a035; }
+    .swatch.fib { border-top-style: dotted; border-color: #3d8f62; }
+    .swatch.live { border-color: #143a63; border-top-style: dashed; }
+    .pick { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .pick th { color: var(--muted); font-weight: 600; font-size: 12px; }
+    .pick th, .pick td { text-align: left; padding: 10px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+    .pick button { background: transparent; color: #143a63; border: 0; padding: 0; font-weight: 700; cursor: pointer; }
+    .pick button:hover { text-decoration: underline; }
+    .verdict { font-weight: 700; }
+    .verdict.buy { color: var(--up); }
+    .verdict.wait { color: var(--mixed); }
+    .verdict.aside { color: var(--muted); }
+    .chart-card { position: relative; }
+    .candle-tip {
+      position: absolute;
+      z-index: 6;
+      max-width: 320px;
+      background: #142033;
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-line;
+      pointer-events: none;
+    }
+    .candle-tip[hidden] { display: none; }
+    .graph-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .graph-panel[hidden] { display: none; }
+    #status { display: flex; align-items: center; gap: 10px; }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid #d7e0ea;
+      border-top-color: #143a63;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex: none;
+    }
+    .spinner.lg { width: 42px; height: 42px; border-width: 4px; }
+    .spinner[hidden] { display: none; }
+    .graph-busy {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.86);
+      border-radius: 12px;
+    }
+    .graph-busy[hidden] { display: none; }
+    .graph-busy p { margin: 0; color: var(--muted); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 800px) {
+      .layout, .graphs, .rapid-grid, .next3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Intraday candle study</h1>
+    <p class="lead">Two separate calls. Next candle uses the latest bars, volume, VWAP, and Nifty. Next day uses daily history, the broader market, and news. Both are probabilities. A small move counts as flat.</p>
+    <form id="form">
+      <input id="symbol" name="symbol" value="MONEYVIEW" aria-label="Symbol or company name" placeholder="Symbol or company name" />
+      <select id="interval" aria-label="Candle size">
+        <option value="1m">1 minute</option>
+        <option value="5m" selected>5 minutes</option>
+        <option value="15m">15 minutes</option>
+      </select>
+      <button id="go" type="submit">Study</button>
+      <button id="trade" type="button">Trade on Groww</button>
+    </form>
+  </header>
+  <main>
+    <section class="card" id="rapid-card">
+      <div class="rapid-head">
+        <h2>Next 5 minutes</h2>
+        <div class="rapid-actions">
+          <span id="rapid-spinner" class="spinner" aria-label="Loading the company list"></span>
+          <p id="rapid-clock" class="note">Checking liquid NSE names...</p>
+          <button id="rapid-refresh" type="button">Refresh list</button>
+        </div>
+      </div>
+      <p id="rapid-note" class="note">Two lists from the latest closed 5-minute candles: names leaning up, and names leaning down. Faster recent candles rank higher. The lists refresh every 5 minutes. Click a name to open its study.</p>
+      <div class="rapid-grid">
+        <div>
+          <h3 class="up">Likely up</h3>
+          <div id="rapid-up"></div>
+        </div>
+        <div>
+          <h3 class="down">Likely down</h3>
+          <div id="rapid-down"></div>
+        </div>
+      </div>
+    </section>
+    <p id="status" class="note"><span id="status-spinner" class="spinner" hidden></span><span id="status-text">Type an NSE symbol or a company name. The page refreshes every minute. Example: DELTACORP, R Systems International.</span></p>
+    <section class="card chart-card">
+      <div class="graph-tabs" role="tablist" id="graph-tabs">
+        <button class="tool on" type="button" role="tab" data-graph="chart" aria-selected="true">Chart</button>
+        <button class="tool" type="button" role="tab" data-graph="previous" aria-selected="false">Previous day</button>
+        <button class="tool" type="button" role="tab" data-graph="history" aria-selected="false">6 months</button>
+        <button class="tool" type="button" role="tab" data-graph="sketch" aria-selected="false">Next session</button>
+        <button class="tool" type="button" role="tab" data-graph="holdings" aria-selected="false">Holdings</button>
+        <button class="tool" type="button" role="tab" data-graph="reach" aria-selected="false">Predicted reach</button>
+        <button class="tool" type="button" role="tab" data-graph="genius" aria-selected="false">Genius</button>
+      </div>
+      <div class="graph-panel" data-graph-panel="chart">
+        <div class="chart-head">
+          <h2 class="section-title" id="today-title">Today</h2>
+          <p id="chart-next" class="note">ഓരോ Candles അവസാനിക്കുമ്പോൾ അടുത്ത Candles-ന്റെ സാധ്യത ഇവിടെ വരും.</p>
+          <div class="zoom-bar">
+            <div class="ranges" id="ranges">
+              <button class="tool" type="button" data-range="1D">1D</button>
+              <button class="tool on" type="button" data-range="5D">5D</button>
+              <button class="tool" type="button" data-range="1M">1M</button>
+              <button class="tool" type="button" data-range="6M">6M</button>
+            </div>
+            <button id="grow" class="tool" type="button">Grow</button>
+            <button id="shrink" class="tool" type="button">Shrink</button>
+            <button id="zoom-in" class="tool" type="button">Zoom in</button>
+            <button id="zoom-out" class="tool" type="button">Zoom out</button>
+            <button id="zoom-reset" class="tool" type="button">Reset</button>
+          </div>
+        </div>
+        <p class="note">1D is today. 5D and 1M keep the intraday candles. 6M is the daily chart, like a broker app. Scroll to zoom, drag to move, Grow makes it taller.</p>
+        <div class="legend">
+          <span><i class="swatch enter"></i>Enter</span>
+          <span><i class="swatch exit"></i>Exit</span>
+          <span><i class="swatch trend"></i>Trend</span>
+          <span><i class="swatch fib"></i>Fibonacci</span>
+          <span><i class="swatch live"></i>Live candle</span>
+        </div>
+        <p class="note" id="chart-key">Dotted numbers are Fibonacci. 0 is the lowest price on screen, 100 is the highest, and 50 is halfway. Price often slows near 38.2, 50, and 61.8. Gold lines follow the recent swings. A green triangle under a candle is a low that turned up. A red triangle above a candle is a high that turned down. None of these is an order.</p>
+        <p class="note" id="live-note">The live candle appears while the cash session is open, 09:15 to 15:30.</p>
+        <canvas id="chart" width="1100" height="420"></canvas>
+        <div id="candle-tip" class="candle-tip" hidden></div>
+        <p id="plan" class="plan"></p>
+        <p id="future-line" class="plan"></p>
+        <p id="genius-line" class="plan"></p>
+        <div id="next3" class="next3"></div>
+      </div>
+      <div class="graph-panel" data-graph-panel="previous" hidden>
+        <h2 class="section-title" id="previous-title">Previous day</h2>
+        <canvas id="previous" width="1100" height="420"></canvas>
+      </div>
+      <div class="graph-panel" data-graph-panel="history" hidden>
+        <h2 class="section-title">History · 6 months</h2>
+        <canvas id="history" width="1100" height="420"></canvas>
+      </div>
+      <div class="graph-panel" data-graph-panel="holdings" hidden>
+        <h2 class="section-title">Good to buy today</h2>
+        <p class="note" id="holdings-note">Names leaning up, with a sketch that reaches above the last price. Click a name to open its chart. This is not an order.</p>
+        <div id="holdings-list"><p class="note">Checking which names look good to buy...</p></div>
+      </div>
+      <div class="graph-panel" data-graph-panel="reach" hidden>
+        <h2 class="section-title">Predicted price</h2>
+        <p class="note">Chart study is where the graph path ends next session. With news moves that price by the headline tone, by at most 1.5%. It is not a guaranteed price.</p>
+        <div id="reach-list"><p class="note">Checking predicted prices...</p></div>
+      </div>
+      <div class="graph-panel" data-graph-panel="genius" hidden>
+        <h2 class="section-title">Genius read</h2>
+        <p class="note">Chart path, grade, and headlines in one read. Buy lean means they agree. Wait means the chart and the news fight. Stand aside means there is no buy. This is not an order.</p>
+        <div id="genius-list"><p class="note">Checking the reads...</p></div>
+      </div>
+      <div class="graph-panel" data-graph-panel="sketch" hidden>
+        <h2 class="section-title" id="forecast-title">Next session sketch</h2>
+        <canvas id="forecast" width="1100" height="420"></canvas>
+      </div>
+      <div id="graph-busy" class="graph-busy" hidden>
+        <div class="spinner lg"></div>
+        <p>Loading the chart...</p>
+      </div>
+    </section>
+    <div class="layout">
+      <section class="card" id="read">
+        <h2 class="lean" id="title">Waiting for a symbol</h2>
+        <p id="mal" class="mal"></p>
+        <div class="prob"><span>Up</span><div class="track"><div id="up-bar" class="fill up"></div></div><b id="up-pct"></b></div>
+        <div class="prob"><span>Neutral</span><div class="track"><div id="neutral-bar" class="fill mixed"></div></div><b id="neutral-pct"></b></div>
+        <div class="prob"><span>Down</span><div class="track"><div id="down-bar" class="fill down"></div></div><b id="down-pct"></b></div>
+        <p id="disclaimer" class="note"></p>
+        <ul id="reasons"></ul>
+      </section>
+    </div>
+    <section class="card forecast-card" id="turn-card">
+      <h2 class="section-title">Candles മാറ്റം</h2>
+      <h2 class="lean" id="turn-title">Waiting for candles</h2>
+      <p id="turn-mal" class="mal"></p>
+      <div id="turn-candles" class="turn-row"></div>
+      <ul id="turn-checks"></ul>
+      <p id="turn-next" class="note"></p>
+      <div class="chance-wrap">
+        <table id="turn-table">
+          <thead>
+            <tr><th>Candles അവസാനം</th><th>open</th><th>close</th><th>മുകളിൽ</th><th>നിഷ്പക്ഷം</th><th>താഴെ</th><th>നിയമം</th><th>അടുത്ത Candles</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="card forecast-card" id="candle-card">
+      <h2 class="lean" id="candle-title">Next candle</h2>
+      <p id="candle-mal" class="mal"></p>
+      <div class="prob"><span>Up</span><div class="track"><div id="candle-up-bar" class="fill up"></div></div><b id="candle-up-pct"></b></div>
+      <div class="prob"><span>Neutral</span><div class="track"><div id="candle-neutral-bar" class="fill mixed"></div></div><b id="candle-neutral-pct"></b></div>
+      <div class="prob"><span>Down</span><div class="track"><div id="candle-down-bar" class="fill down"></div></div><b id="candle-down-pct"></b></div>
+      <p id="candle-disclaimer" class="note"></p>
+      <div id="desk" class="desk"></div>
+      <ul id="candle-reasons"></ul>
+      <div class="features" id="candle-features"></div>
+    </section>
+    <div class="graphs">
+      <section class="card">
+        <h2 class="section-title">Features in the score</h2>
+        <div class="features" id="features"></div>
+      </section>
+      <section class="card">
+        <h2 class="section-title">News</h2>
+        <p id="news-summary" class="note"></p>
+        <div id="news"></div>
+      </section>
+    </div>
+    <section class="card candles" id="company"></section>
+    <section class="card candles" id="last3"></section>
+  </main>
+  <script>
+    const form = document.getElementById("form");
+    const status = document.getElementById("status");
+    const canvas = document.getElementById("chart");
+    const loadedStock = { symbol: "MONEYVIEW", url: "https://groww.in/stocks/moneyview-ltd" };
+    document.getElementById("trade").addEventListener("click", () => {
+      const symbol = (loadedStock.symbol || document.getElementById("symbol").value.trim() || "").replace(/\.NS$/i, "");
+      const url = loadedStock.url || `https://groww.in/search?q=${encodeURIComponent(symbol)}`;
+      window.open(url, "_blank", "noopener");
+    });
+    const previousCanvas = document.getElementById("previous");
+    const historyCanvas = document.getElementById("history");
+    const forecast = document.getElementById("forecast");
+    const forecastCtx = forecast.getContext("2d");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = document.getElementById("go");
+      const symbol = document.getElementById("symbol").value.trim();
+      const interval = document.getElementById("interval").value;
+      button.disabled = true;
+      const showOverlay = !chartBook.session.length;
+      setBusy(showOverlay);
+      status.className = "note";
+      setStatusText("Studying price, market, and news...");
+      try {
+        const response = await fetch(`/api/study?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Study failed");
+        render(data);
+        if (!rapidStarted) {
+          rapidStarted = true;
+          loadRapid(false);
+        }
+        const study = data.study;
+        setStatusText(`${data.name} (${data.symbol}) · ${data.intervalLabel} · session ${study.sessionDate} · open ${study.sessionOpen} · VWAP ${study.vwap}`);
+      } catch (error) {
+        status.className = "error";
+        setStatusText(error.message);
+        document.getElementById("title").textContent = "No stock found";
+        document.getElementById("title").className = "lean down";
+        document.getElementById("mal").textContent = "";
+        document.getElementById("disclaimer").textContent = "";
+        document.getElementById("reasons").innerHTML = "";
+        document.getElementById("last3").innerHTML = "";
+        document.getElementById("features").innerHTML = "";
+        document.getElementById("news").innerHTML = "";
+        document.getElementById("news-summary").textContent = "";
+        document.getElementById("company").textContent = "";
+        document.getElementById("candle-title").textContent = "Next candle";
+        document.getElementById("candle-title").className = "lean";
+        document.getElementById("candle-mal").textContent = "";
+        document.getElementById("candle-disclaimer").textContent = "";
+        document.getElementById("desk").innerHTML = "";
+        document.getElementById("candle-reasons").innerHTML = "";
+        document.getElementById("candle-features").innerHTML = "";
+        document.getElementById("turn-title").textContent = "Candle change";
+        document.getElementById("turn-title").className = "lean";
+        document.getElementById("turn-mal").textContent = "";
+        document.getElementById("turn-candles").innerHTML = "";
+        document.getElementById("turn-checks").innerHTML = "";
+        document.getElementById("turn-next").textContent = "";
+        document.getElementById("chart-next").textContent = "";
+        const turnBody = document.querySelector("#turn-table tbody");
+        if (turnBody) turnBody.innerHTML = "";
+        ["up", "neutral", "down"].forEach((name) => {
+          document.getElementById(`${name}-bar`).style.width = "0";
+          document.getElementById(`${name}-pct`).textContent = "";
+          document.getElementById(`candle-${name}-bar`).style.width = "0";
+          document.getElementById(`candle-${name}-pct`).textContent = "";
+        });
+        document.getElementById("forecast-title").textContent = "Next session sketch";
+        document.getElementById("next3").innerHTML = "";
+        document.getElementById("plan").textContent = "";
+        document.getElementById("future-line").textContent = "";
+        document.getElementById("genius-line").textContent = "";
+        [canvas, previousCanvas, historyCanvas, forecast].forEach((item) => item.getContext("2d").clearRect(0, 0, item.width, item.height));
+      } finally {
+        button.disabled = false;
+        setBusy(false);
+      }
+    });
+
+    function drawTurn(turn) {
+      const title = document.getElementById("turn-title");
+      if (!turn || !turn.ready) {
+        title.textContent = "Candles മാറ്റം";
+        title.className = "lean";
+        document.getElementById("turn-mal").textContent = turn ? turn.malayalam : "";
+        document.getElementById("turn-candles").innerHTML = "";
+        document.getElementById("turn-checks").innerHTML = "";
+        document.getElementById("turn-next").textContent = "";
+        return;
+      }
+      title.textContent = turn.title;
+      title.className = `lean ${turn.lean}`;
+      document.getElementById("turn-mal").textContent = turn.malayalam;
+      document.getElementById("turn-next").textContent = turn.next || "";
+      const rows = turn.candles || [];
+      const low = Math.min(...rows.map((bar) => bar.low));
+      const high = Math.max(...rows.map((bar) => bar.high));
+      const span = Math.max(high - low, 0.01);
+      const plot = 150;
+      const y = (price) => ((high - price) / span) * (plot - 8) + 4;
+      document.getElementById("turn-candles").innerHTML = rows.map((bar) => {
+        const up = bar.close >= bar.open;
+        const bodyTop = y(Math.max(bar.open, bar.close));
+        const bodyBottom = y(Math.min(bar.open, bar.close));
+        const wickTop = y(bar.high);
+        const wickBottom = y(bar.low);
+        return `
+          <div class="turn-col">
+            <div class="turn-plot">
+              <div class="turn-wick" style="top:${wickTop}px;height:${Math.max(wickBottom - wickTop, 1)}px"></div>
+              <div class="turn-body ${up ? "up" : "down"}" style="top:${bodyTop}px;height:${Math.max(bodyBottom - bodyTop, 2)}px"></div>
+            </div>
+            <b>${esc(bar.time)}</b>
+            <div class="turn-label">${esc(bar.label)}</div>
+            <div class="note">open ${bar.open.toFixed(2)}</div>
+            <div class="note">close ${bar.close.toFixed(2)}</div>
+          </div>`;
+      }).join("");
+      document.getElementById("turn-checks").innerHTML = (turn.checks || []).map((item) =>
+        `<li><span class="${item.ok ? "green" : "red"}">${item.ok ? "ഉണ്ട്" : "ഇല്ല"} · ${esc(item.name)}</span><span class="note">${esc(item.detail)}</span></li>`
+      ).join("");
+      const chances = turn.rows || [];
+      const latest = chances[chances.length - 1];
+      chartBook.chanceByTime = {};
+      chances.forEach((row) => {
+        const side = row.side || (row.call === "മുകളിലേക്ക്" ? "up" : row.call === "താഴേക്ക്" ? "down" : "flat");
+        chartBook.chanceByTime[`${row.date || ""}|${row.time}`] = { ...row, side };
+      });
+      chartBook.nextCall = latest ? `${latest.side === "up" ? "▲" : latest.side === "down" ? "▼" : "–"} ${Math.round(latest.chance)}%` : "";
+      document.getElementById("chart-next").textContent = latest
+        ? `${latest.pattern ? `${latest.pattern} · ` : ""}${latest.decision || latest.detail}`
+        : "";
+      document.querySelector("#turn-table tbody").innerHTML = chances.map((row, index) => `
+        <tr class="${index === chances.length - 1 ? "latest" : ""}">
+          <td class="${row.side === "up" ? "green" : row.side === "down" ? "red" : ""}">${row.side === "up" ? "▲" : row.side === "down" ? "▼" : "–"} ${esc(row.time)}</td>
+          <td>${Number(row.open).toFixed(2)}</td>
+          <td>${Number(row.close).toFixed(2)}</td>
+          <td class="green">${row.up}%</td>
+          <td>${row.neutral}%</td>
+          <td class="red">${row.down}%</td>
+          <td>${esc(row.pattern || "—")}</td>
+          <td class="detail">${esc(row.decision || row.comment || "")}</td>
+        </tr>`).join("");
+      const tableWrap = document.querySelector(".chance-wrap");
+      if (tableWrap) tableWrap.scrollTop = tableWrap.scrollHeight;
+    }
+
+    function render(data) {
+      const study = data.study;
+      const title = document.getElementById("title");
+      title.textContent = study.title;
+      title.className = `lean ${study.lean}`;
+      document.getElementById("mal").textContent = study.malayalam;
+      const call = study.direction;
+      document.getElementById("up-bar").style.width = `${call.up}%`;
+      document.getElementById("neutral-bar").style.width = `${call.neutral}%`;
+      document.getElementById("down-bar").style.width = `${call.down}%`;
+      document.getElementById("up-pct").textContent = `${call.up}%`;
+      document.getElementById("neutral-pct").textContent = `${call.neutral}%`;
+      document.getElementById("down-pct").textContent = `${call.down}%`;
+      const prediction = study.prediction;
+      const first = prediction.points[0];
+      document.getElementById("forecast-title").textContent = `Similar-day sketch · ${first.date} · path only, entry and exit stay on the main chart`;
+      loadedStock.symbol = (data.symbol || "").replace(/\.NS$/i, "");
+      loadedStock.url = data.growwUrl || `https://groww.in/search?q=${encodeURIComponent(loadedStock.symbol)}`;
+      document.getElementById("today-title").textContent = `Today · ${study.sessionDate}`;
+      document.getElementById("previous-title").textContent = data.previousDate ? `Previous day · ${data.previousDate}` : "Previous day";
+      document.getElementById("disclaimer").textContent = study.disclaimer;
+      const candle = study.candle;
+      const candleTitle = document.getElementById("candle-title");
+      candleTitle.textContent = candle.title;
+      candleTitle.className = `lean ${candle.lean}`;
+      document.getElementById("candle-mal").textContent = candle.malayalam;
+      document.getElementById("candle-up-bar").style.width = `${candle.up}%`;
+      document.getElementById("candle-neutral-bar").style.width = `${candle.neutral}%`;
+      document.getElementById("candle-down-bar").style.width = `${candle.down}%`;
+      document.getElementById("candle-up-pct").textContent = `${candle.up}%`;
+      document.getElementById("candle-neutral-pct").textContent = `${candle.neutral}%`;
+      document.getElementById("candle-down-pct").textContent = `${candle.down}%`;
+      document.getElementById("candle-disclaimer").textContent = candle.disclaimer;
+      const desk = candle.desk || {};
+      document.getElementById("desk").innerHTML = `
+        <div class="tag grade ${esc(desk.grade || "")}">Grade ${esc(desk.grade || "")} · ${esc(desk.setup || "")}</div>
+        <p>${esc(desk.suggestion || "")}</p>
+        <p class="note">Confirm ${Number(desk.confirm || 0).toFixed(2)} · Invalid ${Number(desk.invalid || 0).toFixed(2)} · ${desk.agree || 0} of 5 checks agree</p>
+        ${(desk.cautions || []).map((item) => `<p class="note">${esc(item)}</p>`).join("")}
+      `;
+      document.getElementById("candle-reasons").innerHTML = candle.reasons.map((item) => `<li>${item}</li>`).join("");
+      document.getElementById("candle-features").innerHTML = candle.features.map((item) => `<span>${item.name}</span><span>${item.value}</span><span class="${item.vote === "up" ? "green" : item.vote === "down" ? "red" : "note"}">${item.vote}</span>`).join("");
+      drawTurn(study.turn);
+      document.getElementById("reasons").innerHTML = study.reasons.map((item) => `<li>${item}</li>`).join("");
+      document.getElementById("last3").innerHTML = study.last3.map((candle) => `
+        <article class="candle">
+          <div>
+            <div class="tag ${candle.direction}">${candle.direction}</div>
+            <div>${candle.time}</div>
+            <div class="note">${candle.date}</div>
+          </div>
+          <div>
+            <div>O ${candle.open} · H ${candle.high} · L ${candle.low} · C ${candle.close}</div>
+            <div class="note">${candle.notes.join(" ")}</div>
+          </div>
+        </article>
+      `).join("");
+      document.getElementById("features").innerHTML = call.features.map((item) => `<span>${item.name}</span><span>${item.value}</span><span class="${item.vote === "up" ? "green" : item.vote === "down" ? "red" : "note"}">${item.vote}</span>`).join("");
+      document.getElementById("news-summary").textContent = data.news.summary;
+      document.getElementById("news").innerHTML = data.news.items.map((item) => `<article class="news-item"><div class="tag ${item.tone === "positive" ? "green" : item.tone === "negative" ? "red" : ""}">${item.tone}</div><div>${item.title}</div><div class="note">${item.source}</div></article>`).join("");
+      document.getElementById("company").textContent = data.company.summary;
+      const lastClose = data.candles[data.candles.length - 1].close;
+      const nextThree = predictedCandles(lastClose, study.prediction.points);
+      const plan = planLevels(lastClose, candle.desk || {}, nextThree, candle.lean);
+      document.getElementById("plan").textContent = plan.text;
+      const future = data.future || {};
+      const futureShift = Number(future.newsShift || 0);
+      document.getElementById("future-line").textContent = future.futurePrice
+        ? `Chart study ends at ${Number(future.chartPrice).toFixed(2)} by ${future.until}. News ${futureShift >= 0 ? "adds" : "subtracts"} ${Math.abs(futureShift).toFixed(2)}. The price to watch is ${Number(future.futurePrice).toFixed(2)}. ${future.summary || ""} Sketch, not a guaranteed price.`
+        : "";
+      document.getElementById("genius-line").textContent = data.genius && data.genius.text ? data.genius.text : "";
+      chartBook.symbol = data.symbol;
+      chartBook.session = data.candles;
+      liveNote(Boolean(data.marketOpen), data.candles[data.candles.length - 1]);
+      chartBook.intraday = data.intraday && data.intraday.length ? data.intraday : data.candles;
+      chartBook.daily = data.dailyHistory || [];
+      chartBook.nextThree = nextThree;
+      chartBook.lines = plan.lines;
+      document.getElementById("next3").innerHTML = nextThree.map((candle, index) => `
+        <article>
+          <div class="tag">Candle ${index + 1} · ${esc(candle.time)}</div>
+          <div class="low">Low ${candle.low.toFixed(2)}</div>
+          <div class="high">High ${candle.high.toFixed(2)}</div>
+        </article>
+      `).join("");
+      applyRange();
+      graphState.previous = data.previousDay || [];
+      graphState.history = data.dailyHistory || [];
+      graphState.lastClose = lastClose;
+      graphState.prediction = study.prediction;
+      paintVisibleGraph();
+    }
+
+    function planLevels(lastClose, desk, nextThree, lean) {
+      const sketchHigh = Math.max(...nextThree.map((candle) => candle.high));
+      const sketchLow = Math.min(...nextThree.map((candle) => candle.low));
+      const enterTime = nextThree[0] ? nextThree[0].time : "";
+      const exitTime = nextThree[nextThree.length - 1] ? nextThree[nextThree.length - 1].time : "";
+      const enter = lastClose;
+      const down = lean === "down";
+      const up = lean === "up";
+      const exit = down ? sketchLow : sketchHigh;
+      const move = exit - enter;
+      const pct = enter ? (move / enter) * 100 : 0;
+      const amount = `${move >= 0 ? "up" : "down"} ${Math.abs(move).toFixed(2)} (${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%)`;
+      const cancel = Number(desk.invalid);
+      const leaves = (up && exit > enter) || (down && exit < enter);
+      const lines = [{ price: enter, color: "#143a63", label: `ENTER ${enter.toFixed(2)}`, kind: "enter" }];
+      let text;
+      if (leaves) {
+        lines.push({ price: exit, color: "#0f7a4a", label: `EXIT ${exit.toFixed(2)}`, kind: "exit" });
+        text = `Enter at ${enterTime} at ${enter.toFixed(2)}. Exit at ${exitTime} at ${exit.toFixed(2)}: ${amount} from the entry.`;
+      } else if (up || down) {
+        text = `Enter at ${enterTime} at ${enter.toFixed(2)}. The next candles do not move ${up ? "above" : "below"} that price, so there is no ${up ? "higher" : "lower"} exit.`;
+      } else {
+        text = "No entry. The call is not clearly up or down.";
+        lines.length = 0;
+      }
+      if (Number.isFinite(cancel) && (up || down)) text += ` Cancel the idea if price trades through ${cancel.toFixed(2)}.`;
+      return { text: `${text} Sketch, not an order.`, lines };
+    }
+
+    function strokePlan(ctx, lines, yOf, x1, x2, textX, top, bottom, withLabels) {
+      const levels = lines.filter((level) => Number.isFinite(level.price)).slice().sort((a, b) => b.price - a.price);
+      ctx.save();
+      ctx.font = "12px Segoe UI";
+      levels.forEach((level, index) => {
+        const raw = yOf(level.price);
+        ctx.setLineDash([]);
+        ctx.strokeStyle = level.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x1, raw);
+        ctx.lineTo(x2, raw);
+        ctx.stroke();
+        if (withLabels === false) return;
+        const highest = index === 0;
+        const textY = Math.max(top + 12, Math.min(highest ? raw - 4 : raw + 14, bottom - 2));
+        ctx.fillStyle = level.color;
+        ctx.fillText(level.label, textX, textY);
+      });
+      ctx.restore();
+    }
+
+    function swingIndexes(candles, span) {
+      const lows = [];
+      const highs = [];
+      if (candles.length < span * 2 + 1) return { lows, highs };
+      for (let index = span; index < candles.length - span; index += 1) {
+        let isLow = true;
+        let isHigh = true;
+        for (let side = 1; side <= span; side += 1) {
+          if (candles[index - side].low <= candles[index].low || candles[index + side].low <= candles[index].low) isLow = false;
+          if (candles[index - side].high >= candles[index].high || candles[index + side].high >= candles[index].high) isHigh = false;
+        }
+        if (isLow) lows.push(index);
+        if (isHigh) highs.push(index);
+      }
+      return { lows, highs };
+    }
+
+    function fibLevels(candles) {
+      const low = Math.min(...candles.map((candle) => candle.low));
+      const high = Math.max(...candles.map((candle) => candle.high));
+      const range = high - low || 1;
+      return [0, 23.6, 38.2, 50, 61.8, 100, 127].map((level) => ({
+        level,
+        price: low + range * (level / 100),
+      }));
+    }
+
+    function drawTrend(ctx, indexes, priceAt, xAt, y, xEnd) {
+      if (indexes.length < 2) return;
+      const pairs = [[indexes[0], indexes[indexes.length - 1]]];
+      if (indexes.length >= 3) pairs.push([indexes[indexes.length - 2], indexes[indexes.length - 1]]);
+      ctx.save();
+      ctx.strokeStyle = "#c4a035";
+      ctx.lineWidth = 1.5;
+      pairs.forEach(([from, to]) => {
+        const x1 = xAt(from);
+        const y1 = y(priceAt(from));
+        const x2 = xAt(to);
+        const y2 = y(priceAt(to));
+        const endY = x2 === x1 ? y2 : y1 + ((y2 - y1) * (xEnd - x1)) / (x2 - x1);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(xEnd, endY);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    function emaSeries(candles, length) {
+      const weight = 2 / (length + 1);
+      let previous = candles[0].close;
+      return candles.map((candle, index) => {
+        previous = index === 0 ? candle.close : candle.close * weight + previous * (1 - weight);
+        return previous;
+      });
+    }
+
+    function drawCurve(ctx, values, xAt, y) {
+      ctx.save();
+      ctx.setLineDash([2, 3]);
+      ctx.lineWidth = 1.25;
+      ctx.beginPath();
+      values.forEach((price, index) => {
+        const x = xAt(index);
+        const line = y(price);
+        if (index === 0) ctx.moveTo(x, line);
+        else ctx.lineTo(x, line);
+      });
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawArrow(ctx, x, y, direction) {
+      ctx.beginPath();
+      if (direction === "up") {
+        ctx.moveTo(x, y - 9);
+        ctx.lineTo(x - 4.5, y);
+        ctx.lineTo(x + 4.5, y);
+      } else {
+        ctx.moveTo(x, y + 9);
+        ctx.lineTo(x - 4.5, y);
+        ctx.lineTo(x + 4.5, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function predictedCandles(lastClose, points) {
+      let open = lastClose;
+      return (points || []).slice(0, 3).map((point) => {
+        const close = point.price;
+        const high = Math.max(open, close, point.high);
+        const low = Math.min(open, close, point.low);
+        const candle = { open, high, low, close, time: point.time, date: point.date, predicted: true };
+        open = close;
+        return candle;
+      });
+    }
+
+    function draw(target, candles, predicted, lines, frame) {
+      const ctx = target.getContext("2d");
+      const extra = predicted || [];
+      const planLines = (lines || []).filter((level) => Number.isFinite(level.price));
+      const source = candles || [];
+      const fitted = fitWindow(source.length, frame);
+      const view = source.slice(fitted.start, fitted.start + fitted.count);
+      const width = target.width;
+      const height = target.height;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+      if (view.length < 2) return;
+      const pad = { top: 22, right: extra.length ? 214 : 78, bottom: 28, left: 58 };
+      const real = view.filter((item) => !item.predicted);
+      const fibs = fibLevels(real);
+      const swings = swingIndexes(real, 3);
+      const prices = real.flatMap((item) => [item.high, item.low]).concat(fibs.map((level) => level.price), planLines.map((level) => level.price));
+      const rawMax = Math.max(...prices);
+      const rawMin = Math.min(...prices);
+      const cushion = Math.max((rawMax - rawMin) * 0.06, 0.05);
+      const max = rawMax + cushion;
+      const min = rawMin - cushion;
+      const span = max - min || 1;
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+      const slot = plotW / real.length;
+      const xAt = (index) => pad.left + slot * index + slot / 2;
+      const y = (price) => pad.top + (max - price) / span * plotH;
+
+      ctx.strokeStyle = "#e6edf5";
+      ctx.fillStyle = "#5c6b80";
+      ctx.font = "12px Segoe UI";
+      for (let step = 0; step <= 4; step += 1) {
+        const price = min + span * step / 4;
+        const line = y(price);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, line);
+        ctx.lineTo(pad.left + plotW, line);
+        ctx.stroke();
+        ctx.fillText(price.toFixed(2), 6, line + 4);
+      }
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pad.left, pad.top, plotW, plotH);
+      ctx.clip();
+      ctx.setLineDash([2, 3]);
+      ctx.strokeStyle = "#3d8f62";
+      ctx.lineWidth = 1;
+      fibs.forEach((level) => {
+        const line = y(level.price);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, line);
+        ctx.lineTo(pad.left + plotW, line);
+        ctx.stroke();
+      });
+      ctx.restore();
+      ctx.setLineDash([]);
+      ctx.font = "11px Segoe UI";
+      fibs.forEach((level) => {
+        const line = y(level.price);
+        if (line < pad.top || line > pad.top + plotH) return;
+        ctx.fillStyle = "#1d7a45";
+        ctx.fillText(`${level.level}`, pad.left + plotW + 6, line + 4);
+      });
+
+      if (target.id === "chart") chartBook.arrowHits = [];
+      real.forEach((candle, index) => {
+        const x = xAt(index);
+        const up = candle.close >= candle.open;
+        const color = candle.live ? "#143a63" : up ? "#0f7a4a" : "#b42318";
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = candle.live ? 2 : 1;
+        ctx.beginPath();
+        ctx.moveTo(x, y(candle.high));
+        ctx.lineTo(x, y(candle.low));
+        ctx.stroke();
+        const top = y(Math.max(candle.open, candle.close));
+        const bottom = y(Math.min(candle.open, candle.close));
+        const body = Math.max(bottom - top, 1);
+        const bodyX = x - Math.max(slot * 0.28, 2);
+        const bodyW = Math.max(slot * 0.56, 4);
+        if (candle.live) {
+          ctx.strokeRect(bodyX, top, bodyW, body);
+          ctx.font = "11px Segoe UI";
+          ctx.fillText("LIVE", x - 14, Math.max(y(candle.high) - 6, pad.top + 12));
+        } else {
+          ctx.fillRect(bodyX, top, bodyW, body);
+        }
+        const mark = target.id === "chart" ? (chartBook.chanceByTime[`${candle.date}|${candle.time}`] || null) : null;
+        if (mark && mark.side !== "flat") {
+          const goingUp = mark.side === "up";
+          const base = y(candle.high) - 16;
+          ctx.fillStyle = goingUp ? "#0f7a4a" : "#b42318";
+          ctx.beginPath();
+          if (goingUp) {
+            ctx.moveTo(x, base - 12);
+            ctx.lineTo(x - 6, base);
+            ctx.lineTo(x + 6, base);
+          } else {
+            ctx.moveTo(x, base + 12);
+            ctx.lineTo(x - 6, base);
+            ctx.lineTo(x + 6, base);
+          }
+          ctx.closePath();
+          ctx.fill();
+          const label = mark.pattern || "";
+          if (label) {
+            ctx.font = "10px Segoe UI";
+            ctx.textAlign = "center";
+            if (ctx.measureText(label).width <= Math.max(slot - 1, 8)) {
+              ctx.fillText(label, x, Math.max(12, base - 14));
+            }
+            ctx.textAlign = "left";
+          }
+          chartBook.arrowHits.push({ x, y: base - 6, detail: mark.detail });
+        }
+        ctx.lineWidth = 1;
+      });
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pad.left, pad.top, plotW, plotH);
+      ctx.clip();
+      ctx.strokeStyle = "#8aa0b8";
+      drawCurve(ctx, emaSeries(real, 9), xAt, y);
+      ctx.strokeStyle = "#5c6b80";
+      drawCurve(ctx, emaSeries(real, 21), xAt, y);
+      drawTrend(ctx, swings.lows, (index) => real[index].low, xAt, y, pad.left + plotW);
+      drawTrend(ctx, swings.highs, (index) => real[index].high, xAt, y, pad.left + plotW);
+      ctx.restore();
+      ctx.fillStyle = "#1f8a4c";
+      swings.lows.slice(-4).forEach((index) => drawArrow(ctx, xAt(index), y(real[index].low) + 12, "up"));
+      ctx.fillStyle = "#b42318";
+      swings.highs.slice(-4).forEach((index) => drawArrow(ctx, xAt(index), y(real[index].high) - 12, "down"));
+      strokePlan(ctx, planLines, y, pad.left, pad.left + plotW, pad.left + plotW - 132, pad.top, pad.top + plotH);
+      ctx.fillStyle = "#5c6b80";
+      ctx.font = "12px Segoe UI";
+      const dayStarts = [];
+      real.forEach((candle, index) => {
+        if (index === 0 || candle.date !== real[index - 1].date) dayStarts.push(index);
+      });
+      if (dayStarts.length <= 1) {
+        ctx.fillText(real[0].time, pad.left, height - 8);
+        ctx.fillText(real[real.length - 1].time, pad.left + plotW - 36, height - 8);
+      } else {
+        ctx.strokeStyle = "#d7e0ea";
+        ctx.lineWidth = 1;
+        let lastLabel = -999;
+        dayStarts.forEach((index) => {
+          const x = xAt(index);
+          if (index > 0) {
+            ctx.beginPath();
+            ctx.moveTo(x, pad.top);
+            ctx.lineTo(x, pad.top + plotH);
+            ctx.stroke();
+          }
+          if (x - lastLabel < 58) return;
+          lastLabel = x;
+          ctx.fillText(real[index].date.slice(5), Math.min(x, pad.left + plotW - 40), height - 8);
+        });
+      }
+
+      if (extra.length) {
+        const boxLeft = pad.left + plotW + 52;
+        const boxWidth = width - boxLeft - 8;
+        ctx.fillStyle = "#f6efe6";
+        ctx.fillRect(boxLeft, pad.top, boxWidth, plotH);
+        const forecastPrices = extra.flatMap((item) => [item.high, item.low]).concat(planLines.map((level) => level.price));
+        const forecastPad = Math.max((Math.max(...forecastPrices) - Math.min(...forecastPrices)) * 0.35, 0.15);
+        const forecastMax = Math.max(...forecastPrices) + forecastPad;
+        const forecastMin = Math.min(...forecastPrices) - forecastPad;
+        const forecastSpan = forecastMax - forecastMin || 1;
+        const forecastY = (price) => pad.top + (forecastMax - price) / forecastSpan * plotH;
+        const forecastSlot = boxWidth / extra.length;
+        ctx.fillStyle = "#7A4E2D";
+        ctx.fillText("next 3", boxLeft + 6, 16);
+        extra.forEach((candle, index) => {
+          const x = boxLeft + forecastSlot * index + forecastSlot / 2;
+          ctx.strokeStyle = "#7A4E2D";
+          ctx.fillStyle = "#7A4E2D";
+          ctx.beginPath();
+          ctx.moveTo(x, forecastY(candle.high));
+          ctx.lineTo(x, forecastY(candle.low));
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          const top = forecastY(Math.max(candle.open, candle.close));
+          const bottom = forecastY(Math.min(candle.open, candle.close));
+          ctx.fillRect(x - Math.max(forecastSlot * 0.28, 5), top, Math.max(forecastSlot * 0.56, 10), Math.max(bottom - top, 4));
+          ctx.font = "11px Segoe UI";
+          ctx.fillText(candle.time, x - 14, height - 8);
+        });
+        ctx.lineWidth = 1;
+        strokePlan(ctx, planLines, forecastY, boxLeft, boxLeft + boxWidth, boxLeft + 4, pad.top, pad.top + plotH, false);
+        const exitLevel = planLines.find((level) => level.kind === "exit");
+        extra.forEach((candle, index) => {
+          if (index !== 0 && !(index === extra.length - 1 && exitLevel)) return;
+          const x = boxLeft + forecastSlot * index + forecastSlot / 2;
+          ctx.strokeStyle = index === 0 ? "#143a63" : "#0f7a4a";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x, pad.top);
+          ctx.lineTo(x, pad.top + plotH);
+          ctx.stroke();
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.font = "11px Segoe UI";
+          ctx.fillText(index === 0 ? "ENTER" : "EXIT", x - 16, pad.top + 28);
+        });
+        ctx.lineWidth = 1;
+      }
+    }
+
+    function fitWindow(total, frame) {
+      const count = Math.max(16, Math.min(total, frame && frame.count ? frame.count : total));
+      let start = frame && Number.isFinite(frame.start) ? frame.start : Math.max(0, total - count);
+      if (start < 0) start = 0;
+      if (start > total - count) start = Math.max(0, total - count);
+      if (frame) {
+        frame.start = start;
+        frame.count = count;
+      }
+      return { start, count };
+    }
+
+    function drawForecast(lastClose, prediction) {
+      const future = prediction.points || [];
+      const points = [{ time: "Close", price: lastClose, low: lastClose, high: lastClose }, ...future];
+      const width = forecast.width;
+      const height = forecast.height;
+      forecastCtx.clearRect(0, 0, width, height);
+      forecastCtx.fillStyle = "#ffffff";
+      forecastCtx.fillRect(0, 0, width, height);
+      if (!future.length) return;
+      const pad = { top: 16, right: 16, bottom: 28, left: 58 };
+      const values = points.flatMap((point) => [point.low, point.high, point.price]);
+      const padding = Math.max((Math.max(...values) - Math.min(...values)) * 0.15, 0.2);
+      const max = Math.max(...values) + padding;
+      const min = Math.min(...values) - padding;
+      const span = max - min || 1;
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+      const slot = plotW / (points.length - 1);
+      const xAt = (index) => pad.left + slot * index;
+      const y = (price) => pad.top + (max - price) / span * plotH;
+
+      forecastCtx.strokeStyle = "#e6edf5";
+      forecastCtx.fillStyle = "#5c6b80";
+      forecastCtx.font = "12px Segoe UI";
+      for (let step = 0; step <= 4; step += 1) {
+        const price = min + span * step / 4;
+        const line = y(price);
+        forecastCtx.beginPath();
+        forecastCtx.moveTo(pad.left, line);
+        forecastCtx.lineTo(width - pad.right, line);
+        forecastCtx.stroke();
+        forecastCtx.fillText(price.toFixed(2), 6, line + 4);
+      }
+
+      forecastCtx.beginPath();
+      forecastCtx.moveTo(xAt(0), y(lastClose));
+      future.forEach((point, index) => forecastCtx.lineTo(xAt(index + 1), y(point.high)));
+      for (let index = future.length - 1; index >= 0; index -= 1) {
+        forecastCtx.lineTo(xAt(index + 1), y(future[index].low));
+      }
+      forecastCtx.closePath();
+      forecastCtx.fillStyle = "rgba(29, 78, 137, 0.16)";
+      forecastCtx.fill();
+
+      forecastCtx.beginPath();
+      points.forEach((point, index) => {
+        const x = xAt(index);
+        const line = y(point.price);
+        if (index === 0) forecastCtx.moveTo(x, line);
+        else forecastCtx.lineTo(x, line);
+      });
+      forecastCtx.strokeStyle = "#1d4e89";
+      forecastCtx.lineWidth = 2;
+      forecastCtx.stroke();
+      forecastCtx.lineWidth = 1;
+      let candleOpen = lastClose;
+      future.slice(0, 3).forEach((point, index) => {
+        const close = point.price;
+        const high = Math.max(candleOpen, close, point.high);
+        const low = Math.min(candleOpen, close, point.low);
+        const x = xAt(index + 1);
+        forecastCtx.strokeStyle = "#7A4E2D";
+        forecastCtx.fillStyle = "#7A4E2D";
+        forecastCtx.beginPath();
+        forecastCtx.moveTo(x, y(high));
+        forecastCtx.lineTo(x, y(low));
+        forecastCtx.lineWidth = 2;
+        forecastCtx.stroke();
+        const top = y(Math.max(candleOpen, close));
+        const bottom = y(Math.min(candleOpen, close));
+        forecastCtx.fillRect(x - Math.max(slot * 0.35, 4), top, Math.max(slot * 0.7, 8), Math.max(bottom - top, 3));
+        candleOpen = close;
+      });
+      forecastCtx.lineWidth = 1;
+      forecastCtx.fillStyle = "#7A4E2D";
+      forecastCtx.fillText("next 3", xAt(2) - 16, 18);
+      points.forEach((point, index) => {
+        if (index !== 0 && index !== points.length - 1 && index % Math.ceil(points.length / 8) !== 0) return;
+        forecastCtx.beginPath();
+        forecastCtx.arc(xAt(index), y(point.price), 3, 0, Math.PI * 2);
+        forecastCtx.fillStyle = "#1d4e89";
+        forecastCtx.fill();
+      });
+
+      forecastCtx.fillStyle = "#5c6b80";
+      forecastCtx.fillText("Close", pad.left, height - 8);
+      const mid = future[Math.floor(future.length / 2)];
+      forecastCtx.fillText(mid.time, pad.left + plotW / 2 - 16, height - 8);
+      forecastCtx.fillText(future[future.length - 1].time, width - 48, height - 8);
+      forecastCtx.fillStyle = "#1d4e89";
+      forecastCtx.fillText(future[future.length - 1].price.toFixed(2), width - 58, y(future[future.length - 1].price) - 6);
+    }
+
+    const rapidCard = document.getElementById("rapid-card");
+    const rapidClock = document.getElementById("rapid-clock");
+    let rapidTimer = null;
+    let rapidDeadline = 0;
+
+    function esc(value) {
+      return String(value).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+    }
+
+    function rapidRows(rows, side) {
+      if (!rows.length) return `<p class="note">No name has two independent checks pointing ${side}.</p>`;
+      return rows.map((row) => `
+        <button class="rapid-row" type="button" data-symbol="${esc(row.symbol)}">
+          <span class="rapid-name">${esc(row.name)}</span>
+          <span class="pace grade ${esc(row.grade || "")}">${esc(row.grade || "")} · ${row.lean === "up" ? "UP" : "DOWN"} ${Math.max(row.up, row.down).toFixed(0)}%</span>
+          <span class="note rapid-span">${esc(row.setup || "")} · ${esc(row.symbol.replace(/\.NS$/, ""))} · ${row.price.toFixed(2)} · confirm ${Number(row.confirm).toFixed(2)} · invalid ${Number(row.invalid).toFixed(2)}</span>
+          <span class="note rapid-span">${esc(row.suggestion || "")}</span>
+        </button>
+      `).join("");
+    }
+
+    function buyRows(data) {
+      const listed = data.buys || [];
+      if (listed.length) return listed;
+      return (data.up || []).filter((row) => Number(row.reach) > Number(row.price));
+    }
+
+    function buyTable(rows, mode) {
+      if (!rows.length) return `<p class="note">No name is graded high enough, with a sketch above the last price.</p>`;
+      const head = mode === "reach"
+        ? "<tr><th>Stock</th><th>Now</th><th>Chart study</th><th>With news</th><th>By</th></tr>"
+        : "<tr><th>Stock</th><th>Grade</th><th>Now</th><th>Why it is on the list</th></tr>";
+      const body = rows.map((row) => {
+        const name = `<button type="button" data-symbol="${esc(row.symbol)}">${esc(row.name)}</button>`;
+        if (mode === "reach") {
+          const futurePrice = Number(row.futurePrice || row.pathEnd || row.reach);
+          const tone = futurePrice >= Number(row.price) ? "green" : "red";
+          return `<tr><td>${name}</td><td>${Number(row.price).toFixed(2)}</td><td>${Number(row.pathEnd || row.reach).toFixed(2)}</td><td class="${tone}">${futurePrice.toFixed(2)}</td><td>${esc(row.pathUntil || row.reachBy || "")}</td></tr>`;
+        }
+        return `<tr><td>${name}</td><td class="grade ${esc(row.grade || "")}">${esc(row.grade || "")}</td><td>${Number(row.price).toFixed(2)}</td><td>${esc(row.setup || "")} · ${Math.max(row.up, row.down).toFixed(0)}% up</td></tr>`;
+      }).join("");
+      return `<table class="pick"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+    }
+
+    function geniusTable(rows) {
+      const ranked = rows.filter((row) => row.genius);
+      if (!ranked.length) return `<p class="note">The read is still loading.</p>`;
+      const order = { "Buy lean": 0, "Wait": 1, "Stand aside": 2 };
+      ranked.sort((a, b) => (order[a.verdict] ?? 3) - (order[b.verdict] ?? 3));
+      const body = ranked.map((row) => {
+        const kind = row.verdict === "Buy lean" ? "buy" : row.verdict === "Wait" ? "wait" : "aside";
+        return `<tr><td><button type="button" data-symbol="${esc(row.symbol)}">${esc(row.name)}</button></td><td class="verdict ${kind}">${esc(row.verdict || "")}</td><td>${esc(row.genius)}</td></tr>`;
+      }).join("");
+      return `<table class="pick"><thead><tr><th>Stock</th><th>Read</th><th>Why</th></tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function renderRapid(data) {
+      document.getElementById("rapid-up").innerHTML = rapidRows(data.up || [], "up");
+      document.getElementById("rapid-down").innerHTML = rapidRows(data.down || [], "down");
+      const picks = buyRows(data);
+      document.getElementById("holdings-list").innerHTML = buyTable(picks, "buy");
+      document.getElementById("reach-list").innerHTML = buyTable(picks, "reach");
+      document.getElementById("genius-list").innerHTML = geniusTable(picks);
+      const holdingsNote = document.getElementById("holdings-note");
+      if (holdingsNote) {
+        holdingsNote.textContent = data.marketOpen
+          ? "These names lean up and the sketch reaches above the last price. Click a name to open its chart. This is not an order."
+          : "The cash session is closed, so this is the buy list for the next session. These names lean up and the sketch reaches above the last price. Click a name to open its chart. This is not an order.";
+      }
+      if (data.note) document.getElementById("rapid-note").textContent = data.note + " Click a name to open its study.";
+      const updating = data.status === "scanning" || data.refreshing;
+      document.getElementById("rapid-refresh").disabled = updating;
+      const wait = updating
+        ? 3
+        : data.status === "ready"
+          ? Math.max(5, (data.refreshesEvery || 300) - (data.ageSeconds || 0))
+          : 3;
+      rapidDeadline = Date.now() + wait * 1000;
+      clearTimeout(rapidTimer);
+      rapidTimer = setTimeout(() => loadRapid(false), wait * 1000);
+      rapidSpinner.hidden = !updating;
+      if (updating) {
+        rapidClock.textContent = "Updating the 5-minute lists...";
+      } else if (data.status === "error") {
+        rapidClock.textContent = data.error || "The list could not be refreshed.";
+      } else {
+        rapidClock.textContent = `As of ${data.asOf || ""} · ${data.scanned || 0} names · refreshes every 5 min`;
+      }
+    }
+
+    async function loadRapid(force) {
+      const refresh = document.getElementById("rapid-refresh");
+      if (force) {
+        rapidClock.textContent = "Updating the 5-minute lists...";
+        rapidSpinner.hidden = false;
+        refresh.disabled = true;
+      }
+      try {
+        const response = await fetch(force ? "/api/rapid?force=1" : "/api/rapid");
+        const data = await response.json();
+        renderRapid(data);
+      } catch (error) {
+        rapidClock.textContent = "Could not refresh the 5-minute lists.";
+        rapidSpinner.hidden = true;
+        refresh.disabled = false;
+        clearTimeout(rapidTimer);
+        rapidTimer = setTimeout(() => loadRapid(false), 15000);
+      }
+    }
+
+    const statusText = document.getElementById("status-text");
+    const rapidSpinner = document.getElementById("rapid-spinner");
+    let activeGraph = "chart";
+    const graphState = { previous: [], history: [], lastClose: null, prediction: null };
+
+    function setStatusText(text) {
+      statusText.textContent = text;
+    }
+
+    function setBusy(on) {
+      document.getElementById("status-spinner").hidden = !on;
+      document.getElementById("graph-busy").hidden = !on;
+    }
+
+    function fitCanvas(node, height) {
+      node.width = Math.max(640, Math.round(node.clientWidth || 1100));
+      node.height = height;
+    }
+
+    function paintSide(node, candles) {
+      fitCanvas(node, 420);
+      draw(node, candles || []);
+    }
+
+    function paintSketch() {
+      if (graphState.lastClose == null || !graphState.prediction) return;
+      fitCanvas(forecast, 420);
+      drawForecast(graphState.lastClose, graphState.prediction);
+    }
+
+    function paintVisibleGraph() {
+      if (activeGraph === "holdings" || activeGraph === "reach" || activeGraph === "genius") return;
+      if (activeGraph === "chart") paintChart();
+      else if (activeGraph === "previous") paintSide(previousCanvas, graphState.previous);
+      else if (activeGraph === "history") paintSide(historyCanvas, graphState.history);
+      else if (activeGraph === "sketch") paintSketch();
+    }
+
+    function showGraph(name) {
+      activeGraph = name;
+      document.querySelectorAll("[data-graph]").forEach((button) => {
+        const on = button.dataset.graph === name;
+        button.classList.toggle("on", on);
+        button.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      document.querySelectorAll("[data-graph-panel]").forEach((panel) => {
+        panel.hidden = panel.dataset.graphPanel !== name;
+      });
+      paintVisibleGraph();
+    }
+
+    document.getElementById("graph-tabs").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-graph]");
+      if (!button) return;
+      showGraph(button.dataset.graph);
+    });
+    window.addEventListener("resize", () => paintVisibleGraph());
+
+    const chartBook = { symbol: "", session: [], intraday: [], daily: [], nextThree: [], lines: [], nextCall: "", chanceByTime: {}, arrowHits: [] };
+    let chartRange = "5D";
+
+    function candlesForRange(range) {
+      if (range === "6M") return chartBook.daily;
+      if (range === "1D") return chartBook.session;
+      const days = [];
+      chartBook.intraday.forEach((candle) => {
+        if (!days.includes(candle.date)) days.push(candle.date);
+      });
+      const keep = new Set(days.slice(range === "5D" ? -5 : -22));
+      const rows = chartBook.intraday.filter((candle) => keep.has(candle.date));
+      return rows.length ? rows : chartBook.session;
+    }
+
+    function applyRange() {
+      document.querySelectorAll("[data-range]").forEach((button) => {
+        button.classList.toggle("on", button.dataset.range === chartRange);
+      });
+      const candles = candlesForRange(chartRange);
+      const first = candles[0];
+      const last = candles[candles.length - 1];
+      const label = { "1D": "1 day", "5D": "5 days", "1M": "1 month", "6M": "6 months" }[chartRange];
+      document.getElementById("today-title").textContent = first
+        ? `${label} · ${first.date} to ${last.date}`
+        : label;
+      presentChart(candles, chartRange === "6M" ? [] : chartBook.nextThree, chartBook.lines, `${chartBook.symbol}|${chartRange}`);
+    }
+
+    document.getElementById("ranges").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-range]");
+      if (!button || !chartBook.session.length) return;
+      chartRange = button.dataset.range;
+      chartView.key = "";
+      applyRange();
+    });
+
+    const chartView = { start: 0, count: 0, height: 420, key: "" };
+    let lastChart = null;
+    let chartDrag = null;
+
+    function paintChart() {
+      if (!lastChart || activeGraph !== "chart") return;
+      canvas.width = Math.max(640, Math.round(canvas.clientWidth || 1100));
+      canvas.height = chartView.height;
+      draw(canvas, lastChart.candles, lastChart.predicted, lastChart.lines, chartView);
+    }
+
+    function presentChart(candles, predicted, lines, symbol) {
+      const previous = lastChart;
+      const pinned = !previous || chartView.key !== symbol || chartView.start + chartView.count >= previous.candles.length - 1;
+      lastChart = { candles, predicted, lines };
+      if (chartView.key !== symbol) {
+        chartView.key = symbol;
+        chartView.start = 0;
+        chartView.count = candles.length;
+      } else if (pinned) {
+        chartView.start = candles.length - (chartView.count || candles.length);
+      }
+      paintChart();
+    }
+
+    function zoomChart(factor) {
+      if (!lastChart) return;
+      const total = lastChart.candles.length;
+      const count = chartView.count || total;
+      const end = chartView.start + count;
+      chartView.count = Math.round(count * factor);
+      chartView.start = end - chartView.count;
+      paintChart();
+    }
+
+    document.getElementById("grow").addEventListener("click", () => {
+      chartView.height = Math.min(880, chartView.height + 140);
+      paintChart();
+    });
+    document.getElementById("shrink").addEventListener("click", () => {
+      chartView.height = Math.max(320, chartView.height - 140);
+      paintChart();
+    });
+    document.getElementById("zoom-in").addEventListener("click", () => zoomChart(0.7));
+    document.getElementById("zoom-out").addEventListener("click", () => zoomChart(1.4));
+    document.getElementById("zoom-reset").addEventListener("click", () => {
+      if (!lastChart) return;
+      chartView.start = 0;
+      chartView.count = lastChart.candles.length;
+      chartView.height = 420;
+      paintChart();
+    });
+    canvas.addEventListener("wheel", (event) => {
+      if (!lastChart) return;
+      event.preventDefault();
+      zoomChart(event.deltaY > 0 ? 1.18 : 0.82);
+    }, { passive: false });
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      chartDrag = { x: event.clientX, start: chartView.start };
+    });
+    canvas.addEventListener("pointermove", (event) => {
+      const tip = document.getElementById("candle-tip");
+      if (chartDrag && lastChart) {
+        tip.hidden = true;
+        const slot = canvas.clientWidth / Math.max(chartView.count, 1);
+        chartView.start = chartDrag.start + Math.round((chartDrag.x - event.clientX) / Math.max(slot, 8));
+        paintChart();
+        return;
+      }
+      const rect = canvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+      const hit = (chartBook.arrowHits || []).find((item) => Math.hypot(item.x - x, item.y - y) < 16);
+      if (!hit) {
+        tip.hidden = true;
+        return;
+      }
+      tip.hidden = false;
+      tip.textContent = hit.detail;
+      const card = canvas.closest(".chart-card").getBoundingClientRect();
+      tip.style.left = `${Math.min(event.clientX - card.left + 14, card.width - 300)}px`;
+      tip.style.top = `${Math.max(8, event.clientY - card.top - 48)}px`;
+    });
+    canvas.addEventListener("pointerleave", () => { document.getElementById("candle-tip").hidden = true; });
+    canvas.addEventListener("pointerup", () => { chartDrag = null; });
+    canvas.addEventListener("pointercancel", () => { chartDrag = null; });
+
+    document.getElementById("rapid-refresh").addEventListener("click", () => loadRapid(true));
+
+    function openStudy(symbol) {
+      document.getElementById("symbol").value = symbol.replace(/\.NS$/i, "");
+      document.getElementById("interval").value = "5m";
+      showGraph("chart");
+      form.requestSubmit();
+    }
+
+    rapidCard.addEventListener("click", (event) => {
+      const row = event.target.closest("[data-symbol]");
+      if (!row) return;
+      openStudy(row.dataset.symbol);
+    });
+    ["holdings-list", "reach-list", "genius-list"].forEach((id) => {
+      document.getElementById(id).addEventListener("click", (event) => {
+        const row = event.target.closest("[data-symbol]");
+        if (!row) return;
+        openStudy(row.dataset.symbol);
+      });
+    });
+
+    setInterval(() => {
+      if (!rapidDeadline) return;
+      const left = Math.max(0, rapidDeadline - Date.now());
+      const seconds = Math.round(left / 1000);
+      const label = document.getElementById("rapid-clock");
+      if (!label || label.textContent.startsWith("Updating") || label.textContent.startsWith("Could not")) return;
+      const base = label.textContent.split(" · next")[0];
+      label.textContent = `${base} · next refresh ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+    }, 1000);
+
+    function liveNote(marketOpen, candle) {
+      const note = document.getElementById("live-note");
+      if (!note) return;
+      if (marketOpen && candle && candle.live) {
+        note.textContent = `Live candle ${candle.time} is still forming. Last price ${Number(candle.close).toFixed(2)}. It updates every 15 seconds.`;
+      } else if (marketOpen) {
+        note.textContent = "The session is open. The blue LIVE candle is the bar still forming.";
+      } else {
+        note.textContent = "The cash session is closed. The blue LIVE candle runs from 09:15 to 15:30 and updates every 15 seconds while the market is open.";
+      }
+    }
+
+    function upsertCandle(rows, candle) {
+      if (!rows || !rows.length || !candle) return;
+      const last = rows[rows.length - 1];
+      if (last.date !== candle.date) return;
+      if (last.epoch === candle.epoch) Object.assign(last, candle);
+      else if (candle.epoch > last.epoch) rows.push({ ...candle });
+    }
+
+    async function refreshLive() {
+      if (document.getElementById("go").disabled || !chartBook.session.length) return;
+      const symbol = document.getElementById("symbol").value.trim();
+      const interval = document.getElementById("interval").value;
+      if (!symbol) return;
+      try {
+        const response = await fetch(`/api/live?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}`);
+        const data = await response.json();
+        if (!response.ok) return;
+        liveNote(data.marketOpen, data.candle);
+        if (!data.marketOpen || !data.candle) return;
+        upsertCandle(chartBook.session, data.candle);
+        upsertCandle(chartBook.intraday, data.candle);
+        applyRange();
+      } catch (error) {
+        /* the regular study refresh fills the gap */
+      }
+    }
+
+    let rapidStarted = false;
+    form.requestSubmit();
+    setInterval(refreshLive, 15000);
+    setInterval(() => {
+      if (!document.getElementById("go").disabled) form.requestSubmit();
+    }, 60000);
+  </script>
+</body>
+</html>

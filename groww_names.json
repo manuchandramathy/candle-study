@@ -1,0 +1,174 @@
+{
+  "ICICIBANK": {
+    "name": "ICICI Bank Ltd.",
+    "url": "https://groww.in/stocks/icici-bank-ltd"
+  },
+  "RELIANCE": {
+    "name": "Reliance Industries Ltd.",
+    "url": "https://groww.in/stocks/reliance-industries-ltd"
+  },
+  "SBIN": {
+    "name": "State Bank Of India",
+    "url": "https://groww.in/stocks/state-bank-of-india"
+  },
+  "BHARTIARTL": {
+    "name": "Bharti Airtel Ltd.",
+    "url": "https://groww.in/stocks/bharti-airtel-ltd"
+  },
+  "TCS": {
+    "name": "Tata Consultancy Services Ltd.",
+    "url": "https://groww.in/stocks/tata-consultancy-services-ltd"
+  },
+  "HDFCBANK": {
+    "name": "HDFC Bank Ltd.",
+    "url": "https://groww.in/stocks/hdfc-bank-ltd"
+  },
+  "INFY": {
+    "name": "Infosys Ltd.",
+    "url": "https://groww.in/stocks/infosys-ltd"
+  },
+  "HINDUNILVR": {
+    "name": "Hindustan Unilever Ltd.",
+    "url": "https://groww.in/stocks/hindustan-unilever-ltd"
+  },
+  "HCLTECH": {
+    "name": "HCL Technologies Ltd.",
+    "url": "https://groww.in/stocks/hcl-technologies-ltd"
+  },
+  "ITC": {
+    "name": "ITC Ltd.",
+    "url": "https://groww.in/stocks/itc-ltd"
+  },
+  "AXISBANK": {
+    "name": "Axis Bank Ltd.",
+    "url": "https://groww.in/stocks/axis-bank-ltd"
+  },
+  "BAJFINANCE": {
+    "name": "Bajaj Finance Ltd.",
+    "url": "https://groww.in/stocks/bajaj-finance-ltd"
+  },
+  "MARUTI": {
+    "name": "Maruti Suzuki India Ltd.",
+    "url": "https://groww.in/stocks/maruti-suzuki-india-ltd"
+  },
+  "KOTAKBANK": {
+    "name": "Kotak Mahindra Bank Ltd.",
+    "url": "https://groww.in/stocks/kotak-mahindra-bank-ltd"
+  },
+  "SUNPHARMA": {
+    "name": "Sun Pharmaceutical Industries Ltd.",
+    "url": "https://groww.in/stocks/sun-pharmaceutical-industries-ltd"
+  },
+  "JSWSTEEL": {
+    "name": "JSW Steel Ltd.",
+    "url": "https://groww.in/stocks/jsw-steel-ltd"
+  },
+  "WIPRO": {
+    "name": "Wipro Ltd.",
+    "url": "https://groww.in/stocks/wipro-ltd"
+  },
+  "ADANIENT": {
+    "name": "Adani Enterprises Ltd.",
+    "url": "https://groww.in/stocks/adani-enterprises-ltd"
+  },
+  "NTPC": {
+    "name": "NTPC Ltd.",
+    "url": "https://groww.in/stocks/ntpc-ltd"
+  },
+  "TITAN": {
+    "name": "Titan Company Ltd.",
+    "url": "https://groww.in/stocks/titan-company-ltd"
+  },
+  "COALINDIA": {
+    "name": "Coal India Ltd.",
+    "url": "https://groww.in/stocks/coal-india-ltd"
+  },
+  "ONGC": {
+    "name": "Oil & Natural Gas Corporation Ltd.",
+    "url": "https://groww.in/stocks/oil-natural-gas-corporation-ltd"
+  },
+  "HINDALCO": {
+    "name": "Hindalco Industries Ltd.",
+    "url": "https://groww.in/stocks/hindalco-industries-ltd"
+  },
+  "POWERGRID": {
+    "name": "Power Grid Corporation Of India Ltd.",
+    "url": "https://groww.in/stocks/power-grid-corporation-of-india-ltd"
+  },
+  "CIPLA": {
+    "name": "Cipla Ltd.",
+    "url": "https://groww.in/stocks/cipla-ltd"
+  },
+  "BAJAJFINSV": {
+    "name": "Bajaj Finserv Ltd.",
+    "url": "https://groww.in/stocks/bajaj-finserv-ltd"
+  },
+  "ASIANPAINT": {
+    "name": "Asian Paints Ltd.",
+    "url": "https://groww.in/stocks/asian-paints-ltd"
+  },
+  "TECHM": {
+    "name": "Tech Mahindra Ltd.",
+    "url": "https://groww.in/stocks/tech-mahindra-ltd"
+  },
+  "TATASTEEL": {
+    "name": "Tata Steel Ltd.",
+    "url": "https://groww.in/stocks/tata-steel-ltd"
+  },
+  "ULTRACEMCO": {
+    "name": "Ultratech Cement Ltd.",
+    "url": "https://groww.in/stocks/ultratech-cement-ltd"
+  },
+  "INDUSINDBK": {
+    "name": "IndusInd Bank Ltd.",
+    "url": "https://groww.in/stocks/indusind-bank-ltd"
+  },
+  "HEROMOTOCO": {
+    "name": "Hero MotoCorp Ltd.",
+    "url": "https://groww.in/stocks/hero-motocorp-ltd"
+  },
+  "DRREDDY": {
+    "name": "Dr. Reddy's Laboratories Ltd.",
+    "url": "https://groww.in/stocks/dr-reddys-laboratories-ltd"
+  },
+  "EICHERMOT": {
+    "name": "Eicher Motors Ltd.",
+    "url": "https://groww.in/stocks/eicher-motors-ltd"
+  },
+  "BPCL": {
+    "name": "Bharat Petroleum Corporation Ltd.",
+    "url": "https://groww.in/stocks/bharat-petroleum-corporation-ltd"
+  },
+  "HAL": {
+    "name": "Hindustan Aeronautics Ltd.",
+    "url": "https://groww.in/stocks/hindustan-aeronautics-ltd"
+  },
+  "TRENT": {
+    "name": "Trent Ltd.",
+    "url": "https://groww.in/stocks/trent-ltd"
+  },
+  "BEL": {
+    "name": "Bharat Electronics Ltd.",
+    "url": "https://groww.in/stocks/bharat-electronics-ltd"
+  },
+  "ADANIPORTS": {
+    "name": "Adani Ports and Special Economic Zone Ltd.",
+    "url": "https://groww.in/stocks/adani-ports-and-special-economic-zone-ltd"
+  },
+  "LT": {
+    "name": "Larsen & Toubro Ltd.",
+    "url": "https://groww.in/stocks/larsen-toubro-ltd"
+  },
+  "DELTACORP": {
+    "name": "Delta Corp Ltd.",
+    "url": "https://groww.in/stocks/delta-corp-ltd"
+  },
+  "MONEYVIEW": {
+    "name": "Moneyview Ltd.",
+    "url": "https://groww.in/stocks/moneyview-ltd"
+  },
+  "BSE": {
+    "name": "BSE Ltd.",
+    "url": "https://groww.in/stocks/bse-ltd"
+  }
+}
